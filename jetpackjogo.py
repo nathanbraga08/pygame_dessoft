@@ -13,10 +13,12 @@ fundo = (0, 0, 0)
 linhas = [0, WIDTH / 4, 2 * WIDTH / 4, 3 * WIDTH / 4]
 velocidade = 2
 pause = False
-init_y = HEIGHT - 130
+font = pygame.font.SysFont(None, 32)
+gravidade = 0
+v_y = 0
+init_y = HEIGHT - 150
 boneco_y = init_y
 boost = False
-contador = 0
 
 #criando cenário
 def tela(listalinhas):
@@ -33,6 +35,14 @@ def tela(listalinhas):
         if listalinhas[i] < 0:
             listalinhas[i] = WIDTH
     return listalinhas, teto, chao
+
+def draw_pause():
+    pygame.draw.rect(window, (128, 128, 128, 150), [0, 0, WIDTH, HEIGHT])
+    restart_btn = pygame.draw.rect(window, 'white', [200, 220, 280, 50], 0, 10)
+    window.blit(font.render('Continuar', True, 'black'), (220, 230))
+    quit_btn = pygame.draw.rect(window, 'white', [520, 220, 280, 50], 0, 10)
+    window.blit(font.render('Sair', True, 'black'), (540, 230))
+    return restart_btn, quit_btn
 
 #criando avatar
 def desenha_avatar():
@@ -75,11 +85,24 @@ while game:
         contador = 0
 
     linhas, teto, chao, = tela(linhas)
+
     avatar = desenha_avatar()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            game = False
+                game = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE and not pause:
+                boost = True
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_SPACE:
+                    boost = False
+    if not pause:
+            if boost:
+                v_y -= gravidade
+            else:
+                v_y += gravidade
+            boneco_y += v_y
 
     pygame.display.update()
 pygame.quit()
