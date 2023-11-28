@@ -14,15 +14,17 @@ linhas = [0, WIDTH / 4, 2 * WIDTH / 4, 3 * WIDTH / 4]
 velocidade = 2
 pause = False
 font = pygame.font.SysFont(None, 32)
-init_y = HEIGHT - 150
+init_y = HEIGHT - 130
 boneco_y = init_y
 boost = False
 contador = 0
-gravidade = 0
 v_y = 0
+gravidade = 0
+atualiza_laser = True
+laser = []
 
 #criando cenário
-def tela(listalinhas):
+def tela(listalinhas, listalaser):
     window.fill('black')
     pygame.draw.rect(window, (fundo[0], fundo[1], fundo[2], 50), [0, 0, WIDTH, HEIGHT])
     window.blit(window, (0, 0))
@@ -33,9 +35,14 @@ def tela(listalinhas):
         pygame.draw.line(window, 'black', (listalinhas[i], HEIGHT - 50), (listalinhas[i], HEIGHT), 3)
         if not pause:
             listalinhas[i] -= velocidade
+            listalaser[0][0] -= velocidade
+            listalaser[1][0] -= velocidade
         if listalinhas[i] < 0:
             listalinhas[i] = WIDTH
-    return listalinhas, teto, chao
+    linha_do_laser = pygame.draw.line(window, 'yellow', (listalaser[0][0],listalaser[0][1]),(listalaser[1][0],listalaser[1][1]), 10)
+    pygame.draw.circle(window, 'yellow', listalaser[0][0],listalaser[0][1], 12)
+    pygame.draw.circle(window, 'yellow', listalaser[1][0],listalaser[1][1], 12)
+    return listalinhas, teto, chao, listalaser, linha_do_laser
 
 def draw_pause():
     pygame.draw.rect(window, (128, 128, 128, 150), [0, 0, WIDTH, HEIGHT])
@@ -86,6 +93,20 @@ def checar_colisao():
     
     return cool
 
+def laser_gerado():
+    tipo_de_laser = random.randint(0,1)
+    offset = random.randint(10,300)
+    match tipo_de_laser:
+        case 0:
+            larg_laser = random.randint(100, 300)
+            laser_y = random.randint(100, HEIGHT - 100)
+            atualiza_laser = [[WIDTH + offset, laser_y], [WIDTH + offset, larg_laser, laser_y]]
+        case 1:
+            alt_laser = random.randint(100, 300)
+            laser_y = random.randint(100, HEIGHT - 400)
+            atualiza_laser = [[WIDTH + offset, laser_y], [WIDTH + offset, laser_y + alt_laser]]
+    return atualiza_laser
+
 game = True 
 while game:
     timer.tick(fps)
@@ -93,8 +114,12 @@ while game:
         contador += 1
     else:
         contador = 0
+    if atualiza_laser:
+        laser = laser_gerado()
+        atualiza_laser = False
 
-    linhas, teto, chao, = tela(linhas)
+
+    linhas, teto, chao, laser, linha_do_laser = tela(linhas, laser)
 
     avatar = desenha_avatar()
 
@@ -117,6 +142,10 @@ while game:
             if (colidindo[0] and v_y >0) or (colidindo[1] and v_y < 0):
                 v_y = 0
             boneco_y += v_y
+
+    if laser[0][0] < 0 and laser[1][0] < 0:
+        atualiza_laser = True
+        
 
     pygame.display.update()
 pygame.quit()
