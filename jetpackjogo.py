@@ -14,12 +14,12 @@ linhas = [0, WIDTH / 4, 2 * WIDTH / 4, 3 * WIDTH / 4]
 velocidade = 2
 pause = False
 font = pygame.font.SysFont(None, 32)
-gravidade = 0
-v_y = 0
 init_y = HEIGHT - 150
 boneco_y = init_y
 boost = False
 contador = 0
+gravidade = 0
+v_y = 0
 
 #criando cenário
 def tela(listalinhas):
@@ -77,6 +77,15 @@ def desenha_avatar():
     pygame.draw.circle(window, 'black', (138, boneco_y + 12), 3)
     return player
 
+def checar_colisao():
+    cool = [False, False]
+    if avatar.colliderect(teto):
+        cool[0] = True
+    elif avatar.colliderect(chao):
+        cool[1] = True
+    
+    return cool
+
 game = True 
 while game:
     timer.tick(fps)
@@ -88,6 +97,8 @@ while game:
     linhas, teto, chao, = tela(linhas)
 
     avatar = desenha_avatar()
+
+    colidindo = checar_colisao()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -103,6 +114,8 @@ while game:
                 v_y -= gravidade
             else:
                 v_y += gravidade
+            if (colidindo[0] and v_y >0) or (colidindo[1] and v_y < 0):
+                v_y = 0
             boneco_y += v_y
 
     pygame.display.update()
