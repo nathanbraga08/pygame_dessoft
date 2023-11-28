@@ -62,6 +62,7 @@ while game:
                 v_y -= gravidade
             else:
                 v_y += gravidade
+            boneco_y += v_y
 
     pygame.display.update()
 pygame.quit()
