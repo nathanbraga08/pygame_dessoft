@@ -73,6 +73,7 @@ while game:
         contador += 1
     else:
         contador = 0
+
     linhas, teto, chao, = tela(linhas)
     avatar = desenha_avatar()
 
