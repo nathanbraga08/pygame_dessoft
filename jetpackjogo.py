@@ -19,6 +19,7 @@ v_y = 0
 init_y = HEIGHT - 150
 boneco_y = init_y
 boost = False
+contador = 0
 
 #criando cenário
 def tela(listalinhas):
