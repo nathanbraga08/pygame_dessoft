@@ -2,6 +2,7 @@ import pygame
 import random
 
 pygame.init()
+pygame.mixer.init()
 
 WIDTH = 900
 HEIGHT = 600
@@ -25,6 +26,11 @@ laser = []
 distancia = 0
 pontuacao = 0 
 reviver = False
+vida = 3
+
+# Carrega os sons do jogo
+pygame.mixer.music.load('efeito-sonoro-hd.ogg')
+pygame.mixer.music.set_volume(0.4)
 
 def tela(listalinhas,listalaser):
     window.fill('black')
@@ -77,13 +83,15 @@ def desenha_avatar():
 def vercolisao():
     cool = [False, False]
     restart = False
+    vida = 3
     if avatar.colliderect(chao_plat):
         cool[0] = True
     elif avatar.colliderect(teto_plat):
         cool[1] = True
     if linha_do_laser.colliderect(avatar):
         restart = True
-    return cool, restart
+        vida -= 1
+    return cool, restart, vida
 
 def laser_gerado():
     tipo_de_laser = random.randint(0,1)
@@ -102,6 +110,9 @@ def laser_gerado():
 
 
 game = True 
+
+pygame.mixer.music.play(loops=-1)
+
 while game:
     timer.tick(fps)
     if contador < 40:
@@ -114,7 +125,7 @@ while game:
 
     linhas, teto_plat, chao_plat, laser, linha_do_laser = tela(linhas, laser)
     avatar = desenha_avatar()
-    colisao, reviver = vercolisao()
+    colisao, reviver, vida = vercolisao()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -151,6 +162,12 @@ while game:
         v_y = 0
         reviver = 0
         atualiza_laser = True
+    
+    if vida == 0:
+        pygame.QUIT = True
+        pontuacao = 0
+    else:
+        pygame.QUIT = False
 
     if distancia > pontuacao:
         pontuacao = int(distancia)
