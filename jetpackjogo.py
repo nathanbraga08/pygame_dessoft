@@ -2,6 +2,7 @@ import pygame
 import random
 
 pygame.init()
+pygame.mixer.init()
 
 WIDTH = 900
 HEIGHT = 600
@@ -24,13 +25,6 @@ atualiza_laser = True
 laser = []
 distancia = 0
 reviver = False
-mudacor = 0
-
-file = open('teste.txt', 'r')
-read = file.readlines()
-maiorponto = int(read[0])
-tvivo = int(read[1])
-file.close()
 
 def tela(listalinhas,listalaser):
     window.fill('black')
@@ -83,13 +77,15 @@ def desenha_avatar():
 def vercolisao():
     cool = [False, False]
     restart = False
+    vida = 3
     if avatar.colliderect(chao_plat):
         cool[0] = True
     elif avatar.colliderect(teto_plat):
         cool[1] = True
     if linha_do_laser.colliderect(avatar):
         restart = True
-    return cool, restart
+        vida -= 1
+    return cool, restart, vida
 
 def laser_gerado():
     tipo_de_laser = random.randint(0,1)
@@ -125,6 +121,9 @@ def modify_player_info():
 
 
 game = True 
+
+pygame.mixer.music.play(loops=-1)
+
 while game:
     timer.tick(fps)
     if contador < 40:
@@ -140,7 +139,7 @@ while game:
         restart, quits = draw_pause()
 
     avatar = desenha_avatar()
-    colisao, reviver = vercolisao()
+    colisao, reviver, vida = vercolisao()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -194,6 +193,12 @@ while game:
         v_y = 0
         reviver = 0
         atualiza_laser = True
+    
+    if vida == 0:
+        pygame.QUIT = True
+        pontuacao = 0
+    else:
+        pygame.QUIT = False
 
     if distancia > maiorponto:
         maiorponto = int(distancia)
