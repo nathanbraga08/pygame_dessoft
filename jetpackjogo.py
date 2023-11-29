@@ -22,6 +22,9 @@ v_y = 0
 gravidade = 0
 atualiza_laser = True
 laser = []
+distance = 0
+pontuacao = 0
+reviver = False
 
 #criando cenário
 def tela(listalinhas, listalaser):
@@ -42,6 +45,8 @@ def tela(listalinhas, listalaser):
     linha_do_laser = pygame.draw.line(window, 'yellow', (listalaser[0][0],listalaser[0][1]),(listalaser[1][0],listalaser[1][1]), 10)
     pygame.draw.circle(window, 'yellow', listalaser[0][0],listalaser[0][1], 12)
     pygame.draw.circle(window, 'yellow', listalaser[1][0],listalaser[1][1], 12)
+    window.blit(font.render(f'distance: {int(distance)} m', True, 'white'), (10,10))
+    window.blit(font.render(f'High Score: {int(pontuacao)} m', True, 'white'), (10,70))
     return listalinhas, teto, chao, listalaser, linha_do_laser
 
 def draw_pause():
@@ -86,12 +91,14 @@ def desenha_avatar():
 
 def checar_colisao():
     cool = [False, False]
+    restart = False
     if avatar.colliderect(teto):
         cool[0] = True
     elif avatar.colliderect(chao):
         cool[1] = True
-    
-    return cool
+    if linha_do_laser.colliderect(avatar):
+        restart = True
+    return cool, restart
 
 def laser_gerado():
     tipo_de_laser = random.randint(0,1)
@@ -118,12 +125,11 @@ while game:
         laser = laser_gerado()
         atualiza_laser = False
 
-
     linhas, teto, chao, laser, linha_do_laser = tela(linhas, laser)
 
     avatar = desenha_avatar()
 
-    colidindo = checar_colisao()
+    colidindo, reviver = checar_colisao()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -135,6 +141,7 @@ while game:
                 if event.key == pygame.K_SPACE:
                     boost = False
     if not pause:
+            distance += velocidade
             if boost:
                 v_y -= gravidade
             else:
@@ -143,9 +150,26 @@ while game:
                 v_y = 0
             boneco_y += v_y
 
+    if distance < 50000:
+        velocidade = 1 + (distance // 500) / 10
+    else:
+        velocidade = 11
+
+
     if laser[0][0] < 0 and laser[1][0] < 0:
         atualiza_laser = True
+
+    if reviver:
+        distance = 0
+        pause = False
+        boneco_y = init_y
+        v_y = 0
+        reviver = 0
+        atualiza_laser = True
         
+    if distance > pontuacao:
+        pontuacao = int(distance)
+
 
     pygame.display.update()
 pygame.quit()
