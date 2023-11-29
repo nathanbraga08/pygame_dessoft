@@ -2,6 +2,7 @@ import random
 import pygame
 
 pygame.init()
+pygame.mixer.init()
 
 WIDTH = 900
 HEIGHT = 600
@@ -25,6 +26,10 @@ laser = []
 distancia = 0
 reviver = False
 mudacor = 0
+
+# Carrega os sons do jogo
+pygame.mixer.music.load('efeito-sonoro-hd.ogg')
+pygame.mixer.music.set_volume(0.4)
 
 file = open('jogadordados.txt', 'r')
 read = file.readlines()
@@ -126,6 +131,9 @@ def modify_player_info():
 
 
 game = True
+
+pygame.mixer.music.play(loops=-1)
+
 while game:
     timer.tick(fps)
     if contador < 40:
