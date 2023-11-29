@@ -12,19 +12,25 @@ timer = pygame.time.Clock()
 font = pygame.font.SysFont(None, 32)
 fundo = (0,0,0)
 linhas = [0, WIDTH / 4, 2 * WIDTH / 4, 3 * WIDTH / 4]
-velocidade = 3
+velocidade = 5
 pause = False
 init_y = HEIGHT - 130
 boneco_y = init_y
-boost = True
+boost = False
 contador = 0
 v_y = 0 
 gravidade = 0.4
 atualiza_laser = True
 laser = []
 distancia = 0
-pontuacao = 0 
 reviver = False
+mudacor = 0
+
+file = open('teste.txt', 'r')
+read = file.readlines()
+maiorponto = int(read[0])
+tvivo = int(read[1])
+file.close()
 
 def tela(listalinhas,listalaser):
     window.fill('black')
@@ -43,7 +49,7 @@ def tela(listalinhas,listalaser):
             listalinhas[i] = WIDTH
     linha_do_laser = pygame.draw.line(window, 'red', (listalaser[0][0],listalaser[0][1]),(listalaser[1][0],listalaser[1][1]), 10)
     window.blit(font.render(f'distancia percorrida: {int(distancia)} m', True, 'white'), (10,10))
-    window.blit(font.render(f'recorde: {int(pontuacao)} m', True, 'white'), (10,70))
+    window.blit(font.render(f'recorde: {int(maiorponto)} m', True, 'white'), (10,70))
     return listalinhas, teto, chao, listalaser, linha_do_laser
 
 def desenha_avatar():
@@ -90,15 +96,32 @@ def laser_gerado():
     offset = random.randint(10,300)
     match tipo_de_laser:
         case 0:
-            larg_laser = random.randint(100, 300)
+            larg_laser = random.randint(100, 350)
             laser_y = random.randint(100, HEIGHT - 100)
             atualiza_laser = [[WIDTH + offset, laser_y], [WIDTH + offset, larg_laser, laser_y]]
         case 1:
-            alt_laser = random.randint(100, 300)
+            alt_laser = random.randint(100, 350)
             laser_y = random.randint(100, HEIGHT - 400)
             atualiza_laser = [[WIDTH + offset, laser_y], [WIDTH + offset, laser_y + alt_laser]]
     return atualiza_laser
 
+def draw_pause():
+    pygame.draw.rect(window, (128, 128, 128, 150), [0, 0, WIDTH, HEIGHT])
+    restart_btn = pygame.draw.rect(window, 'white', [200, 220, 280, 50], 0, 10)
+    window.blit(font.render('Continuar', True, 'black'), (220, 230))
+    quit_btn = pygame.draw.rect(window, 'white', [520, 220, 280, 50], 0, 10)
+    window.blit(font.render('Sair', True, 'black'), (540, 230))
+    return restart_btn, quit_btn
+
+def modify_player_info():
+    global maiorponto, tvivo
+    if distancia > maiorponto:
+        maiorponto = distancia
+    tvivo += distancia
+    file = open('teste.txt', 'w')
+    file.write(str(int(maiorponto)) + '\n')
+    file.write(str(int(tvivo)))
+    file.close()
 
 
 game = True 
@@ -113,18 +136,33 @@ while game:
         atualiza_laser = False
 
     linhas, teto_plat, chao_plat, laser, linha_do_laser = tela(linhas, laser)
+    if pause:
+        restart, quits = draw_pause()
+
     avatar = desenha_avatar()
     colisao, reviver = vercolisao()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            modify_player_info()
             game = False
         if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                if pause:
+                    pause = False
+                else:
+                    pause = True
             if event.key == pygame.K_SPACE and not pause:
                 boost = True
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_SPACE:
                     boost = False
+        if event.type == pygame.MOUSEBUTTONDOWN and pause:
+            if restart.collidepoint(event.pos):
+                reviver = True
+            if quits.collidepoint(event.pos):
+                modify_player_info()
+                run = False
 
     if not pause:
         distancia += velocidade
@@ -144,7 +182,12 @@ while game:
     if laser[0][0] < 0 and laser[1][0] < 0:
         atualiza_laser = True
 
+    if distancia - mudacor > 500:
+        mudacor = distancia
+        fundo = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+
     if reviver:
+        modify_player_info()
         distance = 0
         pause = False
         boneco_y = init_y
@@ -152,8 +195,8 @@ while game:
         reviver = 0
         atualiza_laser = True
 
-    if distancia > pontuacao:
-        pontuacao = int(distancia)
+    if distancia > maiorponto:
+        maiorponto = int(distancia)
 
     pygame.display.update()
 pygame.quit()
