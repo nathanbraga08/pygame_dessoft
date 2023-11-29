@@ -57,12 +57,6 @@ while game:
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_SPACE:
                     boost = False
-    if not pause:
-            if boost:
-                v_y -= gravidade
-            else:
-                v_y += gravidade
-            boneco_y += v_y
 
     pygame.display.update()
 pygame.quit()
