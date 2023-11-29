@@ -1,35 +1,30 @@
-import pygame
 import random
+import pygame
 
 pygame.init()
-pygame.mixer.init()
 
 WIDTH = 900
 HEIGHT = 600
-window = pygame.display.set_mode((WIDTH, HEIGHT))
+window = pygame.display.set_mode([WIDTH, HEIGHT])
 pygame.display.set_caption('Jetpack Insper')
 fps = 60
 timer = pygame.time.Clock()
 font = pygame.font.SysFont(None, 32)
-fundo = (0,0,0)
+fundo = (0, 0, 0)
 linhas = [0, WIDTH / 4, 2 * WIDTH / 4, 3 * WIDTH / 4]
 velocidade = 2
 pause = False
-init_y = HEIGHT - 130
+init_y = HEIGHT - 150
 boneco_y = init_y
 boost = False
 contador = 0
-v_y = 0 
+v_y = 0
 gravidade = 0.5
 atualiza_laser = True
 laser = []
 distancia = 0
 reviver = False
 mudacor = 0
-
-# Carrega os sons do jogo
-pygame.mixer.music.load('efeito-sonoro-hd.ogg')
-pygame.mixer.music.set_volume(0.4)
 
 file = open('jogadordados.txt', 'r')
 read = file.readlines()
@@ -52,18 +47,18 @@ def tela(listalinhas,listalaser):
             listalaser[1][0] -= velocidade
         if listalinhas[i] < 0:
             listalinhas[i] = WIDTH
-    linha_do_laser = pygame.draw.line(window, 'red', (listalaser[0][0],listalaser[0][1]),(listalaser[1][0],listalaser[1][1]), 10)
-    window.blit(font.render(f'distancia percorrida: {int(distancia)} m', True, 'white'), (10,10))
-    window.blit(font.render(f'recorde: {int(maiorponto)} m', True, 'white'), (10,70))
+    linha_do_laser= pygame.draw.line(window, 'red', (listalaser[0][0], listalaser[0][1]), (listalaser[1][0], listalaser[1][1]), 10)
+    window.blit(font.render(f'Distancia Atual: {int(distancia)} m', True, 'white'), (10, 10))
+    window.blit(font.render(f'Recorde: {int(maiorponto)} m', True, 'white'), (10, 70))
     return listalinhas, teto, chao, listalaser, linha_do_laser
 
-def desenha_avatar():
-    player = pygame.rect.Rect((120, boneco_y + 10), (25,60))
 
+def desenha_avatar():
+    player = pygame.rect.Rect((120, boneco_y + 10), (25, 60))
     if boneco_y < init_y or pause:
         if boost:
             pygame.draw.ellipse(window, 'red', [100, boneco_y + 50, 20, 30])
-        pygame.draw.rect(window, 'yellow', [128, boneco_y + 60, 10, 20], 0, 3)
+        pygame.draw.rect(window, 'orange', [130, boneco_y + 60, 10, 20], 0, 3)
         pygame.draw.rect(window, 'orange', [130, boneco_y + 60, 10, 20], 0, 3)
     else:
         if contador < 10:
@@ -80,30 +75,31 @@ def desenha_avatar():
             pygame.draw.rect(window, 'orange', [130, boneco_y + 60, 10, 20], 0, 3)
 
     pygame.draw.rect(window, 'white', [100, boneco_y + 20, 20, 30], 0, 5)
-    pygame.draw.ellipse(window, 'orange', [120, boneco_y + 20, 20, 50])
+    pygame.draw.ellipse(window, 'orange', [120, boneco_y + 20, 30, 50])
     pygame.draw.circle(window, 'orange', (135, boneco_y + 15), 10)
     pygame.draw.circle(window, 'black', (138, boneco_y + 12), 3)
     return player
 
+
 def vercolisao():
-    cool = [False, False]
+    coll = [False, False]
     restart = False
     if avatar.colliderect(chao_plat):
-        cool[0] = True
+        coll[0] = True
     elif avatar.colliderect(teto_plat):
-        cool[1] = True
+        coll[1] = True
     if linha_do_laser.colliderect(avatar):
         restart = True
-    return cool, restart
+    return coll, restart
 
 def laser_gerado():
-    laserforma = random.randint(0,1)
-    offset = random.randint(10,300)
+    laserforma = random.randint(0, 1)
+    offset = random.randint(10, 300)
     match laserforma:
         case 0:
             laserlargura = random.randint(100, 300)
             laser_y = random.randint(100, HEIGHT - 100)
-            atualiza_laser = [[WIDTH + offset, laser_y], [WIDTH + offset, laserlargura, laser_y]]
+            atualiza_laser = [[WIDTH + offset, laser_y], [WIDTH + offset + laserlargura, laser_y]]
         case 1:
             laseraltura = random.randint(100, 300)
             laser_y = random.randint(100, HEIGHT - 400)
@@ -129,10 +125,7 @@ def modify_player_info():
     file.close()
 
 
-game = True 
-
-pygame.mixer.music.play(loops=-1)
-
+game = True
 while game:
     timer.tick(fps)
     if contador < 40:
@@ -142,9 +135,7 @@ while game:
     if atualiza_laser:
         laser = laser_gerado()
         atualiza_laser = False
-
     lines, teto_plat, chao_plat, laser, linha_do_laser = tela(linhas, laser)
-    
     if pause:
         restart, quits = draw_pause()
 
@@ -181,8 +172,9 @@ while game:
             v_y += gravidade
         if (colisao[0] and v_y > 0) or (colisao[1] and v_y < 0):
             v_y = 0
-        boneco_y += v_y 
+        boneco_y += v_y
 
+    # progressive speed increases
     if distancia < 50000:
         velocidade = 1 + (distancia // 500) / 10
     else:
