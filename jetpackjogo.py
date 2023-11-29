@@ -25,6 +25,13 @@ atualiza_laser = True
 laser = []
 distancia = 0
 reviver = False
+mudacor = 0
+
+file = open('teste.txt', 'r')
+read = file.readlines()
+maiorponto = int(read[0])
+tvivo = int(read[1])
+file.close()
 
 def tela(listalinhas,listalaser):
     window.fill('black')
