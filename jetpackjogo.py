@@ -4,14 +4,15 @@ import random
 pygame.init()
 pygame.mixer.init()
 
-WIDTH = 900
-HEIGHT = 600
-window = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption('Jetpack Insper')
-fps = 60
-timer = pygame.time.Clock()
-font = pygame.font.SysFont(None, 32)
-fundo = (0,0,0)
+#definição de variaveis
+WIDTH = 900 #tamanho da tela do jogo
+HEIGHT = 600 #tamanho da tela do jogo
+window = pygame.display.set_mode((WIDTH, HEIGHT)) #define a tela
+pygame.display.set_caption('Jetpack Insper') #define o nome da tela
+fps = 60 #velocidade de rolagem do jogo
+timer = pygame.time.Clock() 
+font = pygame.font.SysFont(None, 32) #fonte usada
+fundo = (0,0,0) #cor do fundo
 linhas = [0, WIDTH / 4, 2 * WIDTH / 4, 3 * WIDTH / 4]
 velocidade = 5
 pause = False
@@ -35,12 +36,14 @@ missel_cord = []
 pygame.mixer.music.load('efeito-sonoro-hd.ogg')
 pygame.mixer.music.set_volume(0.4)
 
+#carrega o arquivo onde fica salvo o historico de pontuação
 file = open('teste.txt', 'r')
 read = file.readlines()
 maiorponto = int(read[0])
 tvivo = int(read[1])
 file.close()
 
+#define o cenario
 def tela(listalinhas,listalaser):
     window.fill('black')
     pygame.draw.rect(window, (fundo[0], fundo[1], fundo[2], 50), [0, 0, WIDTH, HEIGHT])
@@ -62,7 +65,7 @@ def tela(listalinhas,listalaser):
     return listalinhas, teto, chao, listalaser, linha_do_laser
 
 
-
+#define o avatar
 def desenha_avatar():
     player = pygame.rect.Rect((120, boneco_y + 10), (25,60))
 
@@ -72,6 +75,7 @@ def desenha_avatar():
         pygame.draw.rect(window, 'yellow', [128, boneco_y + 60, 10, 20], 0, 3)
         pygame.draw.rect(window, 'orange', [130, boneco_y + 60, 10, 20], 0, 3)
     else:
+        #anima avatar
         if contador < 10:
             pygame.draw.line(window, 'yellow', (128, boneco_y + 60), (140, boneco_y + 80), 10)
             pygame.draw.line(window, 'orange', (130, boneco_y + 60), (120, boneco_y + 80), 10)
@@ -93,7 +97,7 @@ def desenha_avatar():
 
 
 
-
+#define colisao
 def vercolisao():
     coll = [False, False]
     restart = False
@@ -108,7 +112,7 @@ def vercolisao():
             restart = True
     return coll, restart
 
-
+#cria laser
 def laser_gerado():
     tipo_de_laser = random.randint(0,1)
     offset = random.randint(10,300)
@@ -123,6 +127,7 @@ def laser_gerado():
             atualiza_laser = [[WIDTH + offset, laser_y], [WIDTH + offset, laser_y + alt_laser]]
     return atualiza_laser
 
+#cria lançador de missel
 def desenha_foguete(cordenada, modo):
     if modo == 0:
         pedra = pygame.draw.rect(window, 'dark red', [cordenada[0] - 60, cordenada[1] - 25, 50, 50], 0, 5)
@@ -140,7 +145,7 @@ def desenha_foguete(cordenada, modo):
 
     return cordenada, pedra
 
-
+#cria tela de pause
 def draw_pause():
     pygame.draw.rect(window, (128, 128, 128, 150), [0, 0, WIDTH, HEIGHT])
     restart_btn = pygame.draw.rect(window, 'white', [200, 220, 280, 50], 0, 10)
@@ -149,6 +154,7 @@ def draw_pause():
     window.blit(font.render('Sair', True, 'black'), (540, 230))
     return restart_btn, quit_btn
 
+#salva a pontuação
 def modify_player_info():
     global maiorponto, tvivo
     if distancia > maiorponto:
@@ -159,17 +165,20 @@ def modify_player_info():
     file.write(str(int(tvivo)))
     file.close()
 
-
+#inicia jogo
 game = True 
 
+#cria loop da musica
 pygame.mixer.music.play(loops=-1)
 
+#logica do jogo
 while game:
     timer.tick(fps)
     if contador < 40:
         contador += 1
     else:
         contador = 0
+    #criação dos lasers
     if atualiza_laser:
         laser = laser_gerado()
         atualiza_laser = False
@@ -177,6 +186,7 @@ while game:
     if pause:
         restart, quits = draw_pause()
 
+    #define tiros do missel
     if not missel_a and not pause:
         missel_c += 1
     if missel_c > 180:
@@ -195,12 +205,16 @@ while game:
             missel_a = False
 
     avatar = desenha_avatar()
+    #verifica colisão
     colisao, reviver = vercolisao()
 
+    #gerencia eventos do jogo
     for event in pygame.event.get():
+        #fechar tela do jogo
         if event.type == pygame.QUIT:
             modify_player_info()
             game = False
+        #trabalhar com voo do personagem
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 if pause:
@@ -212,6 +226,7 @@ while game:
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_SPACE:
                 boost = False
+        #definir pause
         if event.type == pygame.MOUSEBUTTONDOWN and pause:
             if restart.collidepoint(event.pos):
                 reviver = True
@@ -237,10 +252,12 @@ while game:
     if laser[0][0] < 0 and laser[1][0] < 0:
         atualiza_laser = True
 
+    #trabalhar com mudança de cor do cenário conforme passa o tempo
     if distancia - mudacor > 500:
         mudacor = distancia
         fundo = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
+    #reiniciar jogo
     if reviver:
         modify_player_info()
         distancia = 0
