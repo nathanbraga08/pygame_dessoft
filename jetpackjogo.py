@@ -26,6 +26,14 @@ laser = []
 distancia = 0
 reviver = False
 mudacor = 0
+missel_c = 0
+missel_a = False
+missel_delay = 0
+missel_cord = []
+
+# Carrega os sons do jogo
+pygame.mixer.music.load('efeito-sonoro-hd.ogg')
+pygame.mixer.music.set_volume(0.4)
 
 file = open('teste.txt', 'r')
 read = file.readlines()
@@ -48,10 +56,12 @@ def tela(listalinhas,listalaser):
             listalaser[1][0] -= velocidade
         if listalinhas[i] < 0:
             listalinhas[i] = WIDTH
-    linha_do_laser = pygame.draw.line(window, 'red', (listalaser[0][0],listalaser[0][1]),(listalaser[1][0],listalaser[1][1]), 10)
+    linha_do_laser = pygame.draw.line(window, 'red', (listalaser[0][0], listalaser[0][1]),(listalaser[1][0],listalaser[1][1]), 10)
     window.blit(font.render(f'distancia percorrida: {int(distancia)} m', True, 'white'), (10,10))
     window.blit(font.render(f'recorde: {int(maiorponto)} m', True, 'white'), (10,70))
     return listalinhas, teto, chao, listalaser, linha_do_laser
+
+
 
 def desenha_avatar():
     player = pygame.rect.Rect((120, boneco_y + 10), (25,60))
@@ -81,32 +91,55 @@ def desenha_avatar():
     pygame.draw.circle(window, 'black', (138, boneco_y + 12), 3)
     return player
 
+
+
+
 def vercolisao():
-    cool = [False, False]
+    coll = [False, False]
     restart = False
-    vida = 3
     if avatar.colliderect(chao_plat):
-        cool[0] = True
+        coll[0] = True
     elif avatar.colliderect(teto_plat):
-        cool[1] = True
+        coll[1] = True
     if linha_do_laser.colliderect(avatar):
         restart = True
-        vida -= 1
-    return cool, restart, vida
+    if missel_a:
+        if missel.colliderect(avatar):
+            restart = True
+    return coll, restart
+
 
 def laser_gerado():
     tipo_de_laser = random.randint(0,1)
     offset = random.randint(10,300)
     match tipo_de_laser:
         case 0:
-            larg_laser = random.randint(100, 350)
+            larg_laser = random.randint(100, 300)
             laser_y = random.randint(100, HEIGHT - 100)
             atualiza_laser = [[WIDTH + offset, laser_y], [WIDTH + offset, larg_laser, laser_y]]
         case 1:
-            alt_laser = random.randint(100, 350)
+            alt_laser = random.randint(100, 300)
             laser_y = random.randint(100, HEIGHT - 400)
             atualiza_laser = [[WIDTH + offset, laser_y], [WIDTH + offset, laser_y + alt_laser]]
     return atualiza_laser
+
+def desenha_foguete(cordenada, modo):
+    if modo == 0:
+        pedra = pygame.draw.rect(window, 'dark red', [cordenada[0] - 60, cordenada[1] - 25, 50, 50], 0, 5)
+        window.blit(font.render('!', True, 'black'), (cordenada[0] - 40, cordenada[1] - 20))
+        if not pause:
+            if cordenada[1] > boneco_y + 10:
+                cordenada[1] -= 3
+            else:
+                cordenada[1] += 3
+    else:
+        pedra = pygame.draw.rect(window, 'red', [cordenada[0], cordenada[1] - 10, 50, 20], 0, 5)
+        pygame.draw.ellipse(window, 'orange', [cordenada[0] + 50, cordenada[1] - 10, 50, 20], 7)
+        if not pause:
+            cordenada[0] -= 10 + velocidade
+
+    return cordenada, pedra
+
 
 def draw_pause():
     pygame.draw.rect(window, (128, 128, 128, 150), [0, 0, WIDTH, HEIGHT])
@@ -140,13 +173,29 @@ while game:
     if atualiza_laser:
         laser = laser_gerado()
         atualiza_laser = False
-
     linhas, teto_plat, chao_plat, laser, linha_do_laser = tela(linhas, laser)
     if pause:
         restart, quits = draw_pause()
 
+    if not missel_a and not pause:
+        missel_c += 1
+    if missel_c > 180:
+        missel_c = 0
+        missel_a = True
+        missel_delay = 0
+        missel_cord = [WIDTH, HEIGHT/2]
+    if missel_a:
+        if missel_delay < 90:
+            if not pause:
+                missel_delay += 1
+            missel_cord, missel = desenha_foguete(missel_cord, 0)
+        else:
+            missel_cord, missel = desenha_foguete(missel_cord, 1)
+        if missel_cord[0] < -50:
+            missel_a = False
+
     avatar = desenha_avatar()
-    colisao, reviver, vida = vercolisao()
+    colisao, reviver = vercolisao()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -162,7 +211,7 @@ while game:
                 boost = True
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_SPACE:
-                    boost = False
+                boost = False
         if event.type == pygame.MOUSEBUTTONDOWN and pause:
             if restart.collidepoint(event.pos):
                 reviver = True
@@ -194,18 +243,14 @@ while game:
 
     if reviver:
         modify_player_info()
-        distance = 0
+        distancia = 0
+        missel_a = False
+        missel_c  = 0
         pause = False
         boneco_y = init_y
         v_y = 0
         reviver = 0
         atualiza_laser = True
-    
-    if vida == 0:
-        pygame.QUIT = True
-        pontuacao = 0
-    else:
-        pygame.QUIT = False
 
     if distancia > maiorponto:
         maiorponto = int(distancia)
